@@ -83,13 +83,13 @@
         </div>
         <div>
           <p class="text-xs font-bold text-white tracking-wide">JNE REGULAR / JTR</p>
-          <p class="text-[10px] text-zinc-400 font-mono">Jakarta Central Hub</p>
+          <p class="text-[10px] text-zinc-400 font-mono">Batam Central Hub</p>
         </div>
       </div>
       
       <div class="flex items-center gap-2">
         <span class="text-[10px] font-mono font-bold text-red-400 bg-red-500/10 px-2 py-1 rounded-md border border-red-500/20">
-          JNE-JKT-52363
+          JNE-BTM-52363
         </span>
         <!-- Tombol Kecilin / Perbesar Panel -->
         <button onclick="togglePanel()" class="p-1 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition" title="Kecilkan/Perbesar Panel">
@@ -131,9 +131,9 @@
         <div class="flex items-start justify-between">
           <div>
             <p class="text-[9px] text-zinc-400 uppercase tracking-widest">Pengirim</p>
-            <p class="text-xs font-bold text-white">JNE Gateway Jakarta</p>
+            <p class="text-xs font-bold text-white">JNE Batu Ampar, Batam</p>
           </div>
-          <span class="text-[10px] font-mono text-zinc-500">DKI Jakarta</span>
+          <span class="text-[10px] font-mono text-zinc-500">Kep. Riau</span>
         </div>
         <div class="w-full border-t border-white/5 my-1"></div>
         <div class="flex items-start justify-between">
@@ -149,13 +149,13 @@
       <!-- Lokasi Realtime Saat Ini -->
       <div class="p-2.5 bg-white/5 rounded-xl border border-white/5 flex items-center gap-2 text-xs text-zinc-300">
         <i data-lucide="map-pin" class="w-4 h-4 text-red-500 shrink-0"></i>
-        <span id="location-text" class="truncate font-medium">JNE Gateway Jakarta</span>
+        <span id="location-text" class="truncate font-medium">JNE Gateway Jakarta (Transit Hub)</span>
       </div>
 
       <!-- Progress Bar -->
       <div class="space-y-1.5">
         <div class="flex justify-between text-xs text-zinc-400">
-          <span>Estimasi Transit</span>
+          <span>Estimasi Transit (Batam - Pemalang)</span>
           <span id="progress-text" class="font-mono text-red-400 font-bold">0.0%</span>
         </div>
         <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
@@ -175,23 +175,33 @@
   <script>
     lucide.createIcons();
 
-    const TOTAL_HOURS = 36; // Estimasi Transit Jakarta ke Pemalang
+    const TOTAL_HOURS = 96; 
     const TOTAL_SECONDS = TOTAL_HOURS * 3600;
-    let elapsedSimSeconds = 0; 
-
-    // Waypoints Rute dari Jakarta ke Pemalang
+    
+    // Waypoints Rute dari Batam -> Jakarta -> Pemalang
     const waypoints = [
-      { hour: 0,   coords: [-6.1751, 106.8650], name: "JNE Gateway Jakarta (Sorting Hub)" },
-      { hour: 10,  coords: [-6.3000, 107.1700], name: "Tol Trans-Jawa Cikampek" },
-      { hour: 20,  coords: [-6.7320, 108.5523], name: "Tol Trans-Jawa Cirebon - Pejagan" },
-      { hour: 30,  coords: [-6.9000, 109.5280], name: "Agen JNE Comal (Persiapan Kurir)" },
-      { hour: 36,  coords: [-6.8865, 109.5385], name: "Kurir Andi Setiawan Menuju Desa Gedeg (52363)" }
+      { hour: 0,   coords: [1.1301, 104.1086], name: "JNE Batu Ampar Batam" },
+      { hour: 12,  coords: [-0.8163, 103.4611], name: "Kapal Roro Express (Batam - Kuala Tungkal)" },
+      { hour: 28,  coords: [-1.6101, 103.6131], name: "JNE Sub-Hub Jambi" },
+      { hour: 44,  coords: [-2.9909, 104.7565], name: "JNE Sorting Hub Palembang" },
+      { hour: 58,  coords: [-5.4500, 105.2667], name: "JNE Hub Bandar Lampung" },
+      { hour: 68,  coords: [-5.8722, 105.7533], name: "Pelabuhan Bakauheni" },
+      { hour: 72,  coords: [-5.9328, 105.9922], name: "Ferry Selat Sunda menuju Merak" },
+      { hour: 78,  coords: [-6.1751, 106.8650], name: "JNE Gateway Jakarta (Transit Hub)" }, // Posisinya di sini
+      { hour: 84,  coords: [-6.3000, 107.1700], name: "Tol Trans-Jawa Cikampek" },
+      { hour: 90,  coords: [-6.7320, 108.5523], name: "Tol Trans-Jawa Cirebon - Pejagan" },
+      { hour: 94,  coords: [-6.9000, 109.5280], name: "Agen JNE Comal" },
+      { hour: 96,  coords: [-6.8865, 109.5385], name: "Kurir Andi Setiawan Menuju Desa Gedeg (52363)" }
     ];
 
-    const routeCoords = waypoints.map(w => w.coords);
+    // Mulai simulasi langsung di titik Jakarta (Jam ke-78)
+    let elapsedSimSeconds = 78 * 3600; 
 
-    // Inisialisasi Peta Terpusat di Jakarta
-    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(routeCoords[0], 9);
+    const routeCoords = waypoints.map(w => w.coords);
+    const jakartaCoords = waypoints[7].coords; // Koordinat Jakarta
+
+    // Inisialisasi Peta - Langsung Fokus ke Jakarta
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(jakartaCoords, 9);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
     // Garis Rute Bayangan
@@ -207,10 +217,10 @@
       iconSize: [12, 12], iconAnchor: [6, 6]
     });
     
-    // Marker Asal (Jakarta)
+    // Marker Asal (Batam)
     L.marker(routeCoords[0], { icon: dotIcon('#3b82f6') })
       .addTo(map)
-      .bindTooltip("<b>Asal:</b> JNE Jakarta", { permanent: true, direction: 'top', offset: [0, -8] });
+      .bindTooltip("<b>Asal:</b> JNE Batam", { permanent: true, direction: 'top', offset: [0, -8] });
       
     // Marker Tujuan (Comal, Pemalang)
     L.marker(routeCoords[routeCoords.length - 1], { icon: dotIcon('#10b981') })
@@ -229,10 +239,10 @@
       iconSize: [50, 50], iconAnchor: [25, 25]
     });
 
-    const truckMarker = L.marker(routeCoords[0], { icon: truckIcon }).addTo(map);
+    const truckMarker = L.marker(jakartaCoords, { icon: truckIcon }).addTo(map);
 
     // Label Permanen Truk
-    truckMarker.bindTooltip('<span id="truck-live-label" class="text-red-400 font-bold">📦 Paket iPhone 15 PM - Jakarta</span>', {
+    truckMarker.bindTooltip('<span id="truck-live-label" class="text-red-400 font-bold">📦 Transit Hub Jakarta</span>', {
       permanent: true,
       direction: 'top',
       offset: [0, -20]
@@ -273,7 +283,7 @@
         tooltipLabel.innerText = `🚚 Kurir Andi Setiawan: ${pos.name}`;
       }
 
-      // Update Garis Jejak
+      // Update Garis Jejak dari Batam sampai posisi saat ini
       const currentHour = elapsedSimSeconds / 3600;
       const historyPoints = [];
       for (let h = 0; h <= currentHour; h += 0.5) {
