@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JNE Express</title>
+
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #050505; font-family: system-ui, -apple-system, sans-serif; }
+    #map { width: 100vw; height: 100vh; background: #050505; }
+    .leaflet-container { background: #050505 !important; }
+
+    /* Custom JNE Truck Marker */
+    .truck-marker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .truck-icon-bg {
+      width: 38px;
+      height: 38px;
+      background: #e11d48; /* JNE Red Accent */
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 18px rgba(225, 29, 72, 0.9), 0 0 35px rgba(225, 29, 72, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 10;
+    }
+    .pulse-ring {
+      position: absolute;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background: rgba(225, 29, 72, 0.25);
+      animation: pulse 3s infinite ease-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.3); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* Custom Tooltip Styling di Peta */
+    .leaflet-tooltip {
+      background: rgba(15, 23, 42, 0.9) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      color: #ffffff !important;
+      border-radius: 8px !important;
+      padding: 4px 8px !important;
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+    }
+    .leaflet-tooltip-top:before {
+      border-top-color: rgba(15, 23, 42, 0.9) !important;
+    }
+  </style>
+</head>
+<body class="relative">
+
+  <!-- FULLSCREEN LEAFLET MAP -->
+  <div id="map"></div>
+
+  <!-- FLOATING CARD JNE PANEL (TOP LEFT) -->
+  <div class="absolute top-6 left-6 z-[1000] w-80 md:w-96 backdrop-blur-xl bg-black/85 border border-white/10 rounded-2xl p-5 shadow-2xl text-white max-h-[92vh] overflow-y-auto">
+    
+    <!-- Branding JNE & Resi -->
+    <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center font-black text-white text-xs tracking-tighter shadow-md shadow-red-600/30">
+          JNE
+        </div>
+        <div>
+          <p class="text-xs font-bold text-white tracking-wide">JNE REGULAR / JTR</p>
+          <p class="text-[10px] text-zinc-400 font-mono">Batam Central Hub</p>
+        </div>
+      </div>
+      <span class="text-[10px] font-mono font-bold text-red-400 bg-red-500/10 px-2.5 py-1 rounded-md border border-red-500/20">
+        JNE-BTM-52363
+      </span>
+    </div>
+
+    <!-- Live Status & Timer -->
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+        </span>
+        <span class="text-[11px] font-semibold tracking-wider text-emerald-400 uppercase">Dalam Perjalanan</span>
+      </div>
+      <span class="text-[11px] font-mono text-zinc-300 font-medium" id="time-display">
+        HARI 1 • 08:00:00 WIB
+      </span>
+    </div>
+
+    <!-- DESKRIPSI PAKET & KURIR -->
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <!-- Info Barang -->
+      <div class="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-2.5">
+        <div class="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg shrink-0">
+          <i data-lucide="smartphone" class="w-4 h-4"></i>
+        </div>
+        <div class="overflow-hidden">
+          <p class="text-[9px] text-zinc-400 uppercase tracking-wider">Isi Paket</p>
+          <p class="text-xs font-bold text-white truncate">iPhone 15 Pro Max</p>
+        </div>
+      </div>
+
+      <!-- Info Kurir -->
+      <div class="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-2.5">
+        <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg shrink-0">
+          <i data-lucide="user-check" class="w-4 h-4"></i>
+        </div>
+        <div class="overflow-hidden">
+          <p class="text-[9px] text-zinc-400 uppercase tracking-wider">Kurir</p>
+          <p class="text-xs font-bold text-emerald-400 truncate">Andi Setiawan</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Rute Presisi -->
+    <div class="space-y-2 my-3 bg-white/5 p-3 rounded-xl border border-white/5">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-[9px] text-zinc-400 uppercase tracking-widest">Pengirim</p>
+          <p class="text-xs font-bold text-white">JNE Batu Ampar, Batam</p>
+        </div>
+        <span class="text-[10px] font-mono text-zinc-500">Kep. Riau</span>
+      </div>
+      <div class="w-full border-t border-white/5 my-1"></div>
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-[9px] text-zinc-400 uppercase tracking-widest">Penerima & Alamat Tujuan</p>
+          <p class="text-xs font-bold text-emerald-400">Desa Gedeg, Kec. Comal</p>
+          <p class="text-[10px] text-zinc-300">Kab. Pemalang, Jawa Tengah (52363)</p>
+        </div>
+        <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">52363</span>
+      </div>
+    </div>
+
+    <!-- Lokasi Realtime Saat Ini -->
+    <div class="p-2.5 bg-white/5 rounded-xl border border-white/5 flex items-center gap-2 text-xs text-zinc-300">
+      <i data-lucide="map-pin" class="w-4 h-4 text-red-500 shrink-0"></i>
+      <span id="location-text" class="truncate font-medium">JNE Sorting Center Batam</span>
+    </div>
+
+    <!-- Progress Bar (3-5 Hari) -->
+    <div class="mt-4 space-y-1.5">
+      <div class="flex justify-between text-xs text-zinc-400">
+        <span>Estimasi Transit (3-5 Hari)</span>
+        <span id="progress-text" class="font-mono text-red-400 font-bold">0.0%</span>
+      </div>
+      <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+        <div id="progress-bar" class="bg-gradient-to-r from-red-500 via-amber-500 to-emerald-400 h-full w-0 transition-all duration-300"></div>
+      </div>
+    </div>
+
+    <!-- Kontrol Kecepatan GPS -->
+    <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+      <span class="text-[10px] text-zinc-400 uppercase font-mono">Kecepatan Live:</span>
+      <div class="flex gap-1">
+        <button onclick="setSpeed(1)" id="speed-1" class="px-2.5 py-1 bg-red-600 text-white rounded-lg text-[10px] font-bold transition">Sangat Lambat</button>
+        <button onclick="setSpeed(60)" id="speed-60" class="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-zinc-300 rounded-lg text-[10px] font-bold transition">1s = 1 Mnt</button>
+        <button onclick="setSpeed(600)" id="speed-600" class="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-zinc-300 rounded-lg text-[10px] font-bold transition">1s = 10 Mnt</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RE-CENTER BUTTON -->
+  <button onclick="reCenterMap()" class="absolute bottom-6 right-6 z-[1000] backdrop-blur-xl bg-black/80 border border-white/10 text-white p-3.5 rounded-2xl shadow-xl hover:bg-white/10 transition">
+    <i data-lucide="crosshair" class="w-5 h-5 text-red-500"></i>
+  </button>
+
+  <script>
+    lucide.createIcons();
+
+    const TOTAL_HOURS = 96; // 4 Hari Rata-rata
+    const TOTAL_SECONDS = TOTAL_HOURS * 3600;
+    
+    let elapsedSimSeconds = 0; 
+    let timeMultiplier = 1;
+
+    const waypoints = [
+      { hour: 0,   coords: [1.1301, 104.1086], name: "JNE Batu Ampar Batam (iPhone 15 PM)" },
+      { hour: 8,   coords: [-0.8163, 103.4611], name: "Kapal Roro Express (Batam - Kuala Tungkal)" },
+      { hour: 20,  coords: [-1.6101, 103.6131], name: "JNE Sub-Hub Jambi" },
+      { hour: 36,  coords: [-2.9909, 104.7565], name: "JNE Sorting Hub Palembang" },
+      { hour: 54,  coords: [-5.4500, 105.2667], name: "JNE Hub Bandar Lampung" },
+      { hour: 64,  coords: [-5.8722, 105.7533], name: "Pelabuhan Bakauheni (Penyeberangan)" },
+      { hour: 72,  coords: [-5.9328, 105.9922], name: "Ferry Selat Sunda menuju Merak" },
+      { hour: 80,  coords: [-6.3000, 107.1700], name: "Tol Trans-Jawa Cikampek" },
+      { hour: 88,  coords: [-6.7320, 108.5523], name: "Tol Trans-Jawa Cirebon - Pejagan" },
+      { hour: 92,  coords: [-6.9000, 109.5280], name: "Agen JNE Comal (Persiapan Kurir)" },
+      { hour: 96,  coords: [-6.8865, 109.5385], name: "Kurir Andi Setiawan Menuju Desa Gedeg (52363)" }
+    ];
+
+    const routeCoords = waypoints.map(w => w.coords);
+
+    // Inisialisasi Peta
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(routeCoords[0], 7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+
+    // Garis Rute Bayangan
+    L.polyline(routeCoords, { color: '#27272a', weight: 3, dashArray: '6, 8' }).addTo(map);
+
+    // Garis Jejak Terlewati
+    const traveledLine = L.polyline([], { color: '#e11d48', weight: 4, opacity: 0.9 }).addTo(map);
+
+    // Marker Dot Style
+    const dotIcon = (color) => L.divIcon({
+      className: '',
+      html: `<div style="background:${color}; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px ${color}"></div>`,
+      iconSize: [12, 12], iconAnchor: [6, 6]
+    });
+    
+    // Marker Asal dengan Label Permanen di Peta
+    L.marker(routeCoords[0], { icon: dotIcon('#3b82f6') })
+      .addTo(map)
+      .bindTooltip("<b>Asal:</b> JNE Batam", { permanent: true, direction: 'top', offset: [0, -8] });
+      
+    // Marker Tujuan dengan Label Permanen di Peta
+    L.marker(routeCoords[routeCoords.length - 1], { icon: dotIcon('#10b981') })
+      .addTo(map)
+      .bindTooltip("<b>Tujuan:</b> Desa Gedeg, Comal (52363)", { permanent: true, direction: 'bottom', offset: [0, 8] });
+
+    // Marker Truk
+    const truckIcon = L.divIcon({
+      className: 'truck-marker',
+      html: `
+        <div class="pulse-ring"></div>
+        <div class="truck-icon-bg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+        </div>
+      `,
+      iconSize: [50, 50], iconAnchor: [25, 25]
+    });
+
+    const truckMarker = L.marker(routeCoords[0], { icon: truckIcon }).addTo(map);
+
+    // LABEL PERMANEN DI ATAS IKON TRUK
+    truckMarker.bindTooltip('<span id="truck-live-label" class="text-red-400 font-bold">📦 Paket iPhone 15 PM - Batam</span>', {
+      permanent: true,
+      direction: 'top',
+      offset: [0, -20]
+    });
+
+    function getSlowPosition(simSeconds) {
+      const currentHour = simSeconds / 3600;
+
+      if (currentHour <= 0) return { coords: waypoints[0].coords, name: waypoints[0].name };
+      if (currentHour >= TOTAL_HOURS) return { coords: waypoints[waypoints.length - 1].coords, name: waypoints[waypoints.length - 1].name };
+
+      for (let i = 0; i < waypoints.length - 1; i++) {
+        const start = waypoints[i];
+        const end = waypoints[i + 1];
+
+        if (currentHour >= start.hour && currentHour <= end.hour) {
+          const ratio = (currentHour - start.hour) / (end.hour - start.hour);
+          const lat = start.coords[0] + (end.coords[0] - start.coords[0]) * ratio;
+          const lng = start.coords[1] + (end.coords[1] - start.coords[1]) * ratio;
+          return { coords: [lat, lng], name: start.name };
+        }
+      }
+      return { coords: waypoints[0].coords, name: waypoints[0].name };
+    }
+
+    function updateTracker() {
+      elapsedSimSeconds += (0.2 * timeMultiplier * 10);
+      if (elapsedSimSeconds > TOTAL_SECONDS) elapsedSimSeconds = TOTAL_SECONDS;
+
+      const pos = getSlowPosition(elapsedSimSeconds);
+
+      // Pindahkan Marker
+      truckMarker.setLatLng(pos.coords);
+
+      // Update Label Permanen yang Ikut Berjalan di Atas Truk
+      const tooltipLabel = document.getElementById('truck-live-label');
+      if (tooltipLabel) {
+        tooltipLabel.innerText = `🚚 Kurir Andi Setiawan: ${pos.name}`;
+      }
+
+      // Update Garis Jejak
+      const currentHour = elapsedSimSeconds / 3600;
+      const historyPoints = [];
+      for (let h = 0; h <= currentHour; h += 0.5) {
+        historyPoints.push(getSlowPosition(h * 3600).coords);
+      }
+      historyPoints.push(pos.coords);
+      traveledLine.setLatLngs(historyPoints);
+
+      // Format Waktu
+      const day = Math.floor(currentHour / 24) + 1;
+      const totalMinutes = Math.floor((elapsedSimSeconds % 3600) / 60);
+      const hourOfDay = (8 + Math.floor(currentHour)) % 24;
+      const seconds = Math.floor(elapsedSimSeconds % 60);
+
+      const formatTwo = (num) => num.toString().padStart(2, '0');
+
+      document.getElementById('time-display').innerText = `HARI ${day} • ${formatTwo(hourOfDay)}:${formatTwo(totalMinutes)}:${formatTwo(seconds)} WIB`;
+      document.getElementById('location-text').innerText = pos.name;
+
+      // Progress bar %
+      const progressPercent = ((elapsedSimSeconds / TOTAL_SECONDS) * 100).toFixed(1);
+      document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+      document.getElementById('progress-text').innerText = `${progressPercent}%`;
+    }
+
+    setInterval(updateTracker, 200);
+
+    function setSpeed(mult) {
+      timeMultiplier = mult;
+      ['speed-1', 'speed-60', 'speed-600'].forEach(id => {
+        const btn = document.getElementById(id);
+        btn.className = "px-2.5 py-1 bg-white/10 hover:bg-white/20 text-zinc-300 rounded-lg text-[10px] font-bold transition";
+      });
+
+      const activeBtn = document.getElementById(`speed-${mult}`);
+      if (activeBtn) {
+        activeBtn.className = "px-2.5 py-1 bg-red-600 text-white rounded-lg text-[10px] font-bold transition";
+      }
+    }
+
+    function reCenterMap() {
+      map.flyTo(truckMarker.getLatLng(), 9, { duration: 1.2 });
+    }
+  </script>
+</body>
+</html>
