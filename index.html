@@ -149,7 +149,7 @@
       <!-- Lokasi Realtime Saat Ini -->
       <div class="p-2.5 bg-white/5 rounded-xl border border-white/5 flex items-center gap-2 text-xs text-zinc-300">
         <i data-lucide="map-pin" class="w-4 h-4 text-red-500 shrink-0"></i>
-        <span id="location-text" class="truncate font-medium">JNE Hub Ciamis (Transit)</span>
+        <span id="location-text" class="truncate font-medium">JNE Hub Banjarharjo, Brebes (Transit)</span>
       </div>
 
       <!-- Progress Bar -->
@@ -178,7 +178,7 @@
     const TOTAL_HOURS = 96; 
     const TOTAL_SECONDS = TOTAL_HOURS * 3600;
     
-    // Waypoints Rute dari Batam -> Jakarta -> Bandung -> Ciamis -> Pemalang
+    // Waypoints Rute dari Batam -> Jakarta -> Bandung -> Ciamis -> Banjarharjo -> Pemalang
     const waypoints = [
       { hour: 0,   coords: [1.1301, 104.1086], name: "JNE Batu Ampar Batam" },
       { hour: 12,  coords: [-0.8163, 103.4611], name: "Kapal Roro Express (Batam - Kuala Tungkal)" },
@@ -189,20 +189,20 @@
       { hour: 72,  coords: [-5.9328, 105.9922], name: "Ferry Selat Sunda menuju Merak" },
       { hour: 78,  coords: [-6.1751, 106.8650], name: "JNE Gateway Jakarta" },
       { hour: 83,  coords: [-6.9175, 107.6191], name: "JNE Hub Bandung" },
-      { hour: 87,  coords: [-7.3274, 108.3551], name: "JNE Hub Ciamis (Transit)" }, // Posisinya saat ini
-      { hour: 91,  coords: [-6.8921, 108.9288], name: "Jalur Selatan - Brebes Pejagan" },
+      { hour: 87,  coords: [-7.3274, 108.3551], name: "JNE Hub Ciamis" },
+      { hour: 91,  coords: [-6.9856, 108.8256], name: "JNE Hub Banjarharjo, Brebes (Transit)" }, // Posisinya saat ini
       { hour: 94,  coords: [-6.9000, 109.5280], name: "Agen JNE Comal" },
       { hour: 96,  coords: [-6.8865, 109.5385], name: "Kurir Andi Setiawan Menuju Desa Gedeg (52363)" }
     ];
 
-    // Mulai simulasi langsung di titik Ciamis (Jam ke-87)
-    let elapsedSimSeconds = 87 * 3600; 
+    // Mulai simulasi langsung di titik Banjarharjo (Jam ke-91)
+    let elapsedSimSeconds = 91 * 3600; 
 
     const routeCoords = waypoints.map(w => w.coords);
-    const ciamisCoords = waypoints[9].coords; // Koordinat Ciamis
+    const banjarharjoCoords = waypoints[10].coords; // Koordinat Banjarharjo
 
-    // Inisialisasi Peta - Langsung Fokus ke Ciamis
-    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(ciamisCoords, 10);
+    // Inisialisasi Peta - Langsung Fokus ke Banjarharjo
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(banjarharjoCoords, 10);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
     // Garis Rute Bayangan
@@ -240,10 +240,10 @@
       iconSize: [50, 50], iconAnchor: [25, 25]
     });
 
-    const truckMarker = L.marker(ciamisCoords, { icon: truckIcon }).addTo(map);
+    const truckMarker = L.marker(banjarharjoCoords, { icon: truckIcon }).addTo(map);
 
     // Label Permanen Truk
-    truckMarker.bindTooltip('<span id="truck-live-label" class="text-red-400 font-bold">📦 Transit Hub Ciamis</span>', {
+    truckMarker.bindTooltip('<span id="truck-live-label" class="text-red-400 font-bold">📦 Transit Hub Banjarharjo</span>', {
       permanent: true,
       direction: 'top',
       offset: [0, -20]
