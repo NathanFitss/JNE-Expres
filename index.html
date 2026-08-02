@@ -19,7 +19,7 @@
     #map { width: 100vw; height: 100vh; background: #050505; }
     .leaflet-container { background: #050505 !important; }
 
-    /* Custom JNE Truck Marker */
+    /* Custom JNE Truck / Courier Marker */
     .truck-marker {
       display: flex;
       align-items: center;
@@ -28,10 +28,10 @@
     .truck-icon-bg {
       width: 38px;
       height: 38px;
-      background: #e11d48; /* JNE Red Accent */
+      background: #10b981; /* Emerald Accent for Final Delivery */
       border: 2px solid #ffffff;
       border-radius: 50%;
-      box-shadow: 0 0 18px rgba(225, 29, 72, 0.9), 0 0 35px rgba(225, 29, 72, 0.4);
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.9), 0 0 35px rgba(16, 185, 129, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -43,8 +43,8 @@
       width: 55px;
       height: 55px;
       border-radius: 50%;
-      background: rgba(225, 29, 72, 0.25);
-      animation: pulse 3s infinite ease-out;
+      background: rgba(16, 185, 129, 0.3);
+      animation: pulse 2s infinite ease-out;
     }
     @keyframes pulse {
       0% { transform: scale(0.3); opacity: 1; }
@@ -88,8 +88,8 @@
       </div>
       
       <div class="flex items-center gap-2">
-        <span class="text-[10px] font-mono font-bold text-red-400 bg-red-500/10 px-2 py-1 rounded-md border border-red-500/20">
-          JNE-BTM-52363
+        <span class="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+          OUT FOR DELIVERY
         </span>
         <!-- Tombol Kecilin / Perbesar Panel -->
         <button onclick="togglePanel()" class="p-1 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition" title="Kecilkan/Perbesar Panel">
@@ -147,19 +147,19 @@
       </div>
 
       <!-- Lokasi Realtime Saat Ini -->
-      <div class="p-2.5 bg-white/5 rounded-xl border border-white/5 flex items-center gap-2 text-xs text-zinc-300">
-        <i data-lucide="map-pin" class="w-4 h-4 text-red-500 shrink-0"></i>
-        <span id="location-text" class="truncate font-medium">JNE Hub Banjarharjo, Brebes (Transit)</span>
+      <div class="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-300">
+        <i data-lucide="navigation" class="w-4 h-4 text-emerald-400 shrink-0 animate-pulse"></i>
+        <span id="location-text" class="truncate font-bold">Sedang Diantar Kurir ke Rumah Penerima</span>
       </div>
 
       <!-- Progress Bar -->
       <div class="space-y-1.5">
         <div class="flex justify-between text-xs text-zinc-400">
-          <span>Estimasi Transit (Batam - Pemalang)</span>
-          <span id="progress-text" class="font-mono text-red-400 font-bold">0.0%</span>
+          <span>Pengiriman Terakhir (Comal - Rumah)</span>
+          <span id="progress-text" class="font-mono text-emerald-400 font-bold">98.5%</span>
         </div>
         <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-          <div id="progress-bar" class="bg-gradient-to-r from-red-500 via-amber-500 to-emerald-400 h-full w-0 transition-all duration-300"></div>
+          <div id="progress-bar" class="bg-gradient-to-r from-red-500 via-amber-500 to-emerald-400 h-full w-[98.5%] transition-all duration-300"></div>
         </div>
       </div>
 
@@ -169,7 +169,7 @@
 
   <!-- RE-CENTER BUTTON -->
   <button onclick="reCenterMap()" class="absolute bottom-6 right-6 z-[1000] backdrop-blur-xl bg-black/80 border border-white/10 text-white p-3.5 rounded-2xl shadow-xl hover:bg-white/10 transition">
-    <i data-lucide="crosshair" class="w-5 h-5 text-red-500"></i>
+    <i data-lucide="crosshair" class="w-5 h-5 text-emerald-400"></i>
   </button>
 
   <script>
@@ -178,38 +178,38 @@
     const TOTAL_HOURS = 96; 
     const TOTAL_SECONDS = TOTAL_HOURS * 3600;
     
-    // Waypoints Rute dari Batam -> Jakarta -> Bandung -> Ciamis -> Banjarharjo -> Pemalang
+    // Waypoints Rute dari Batam -> Jakarta -> Bandung -> Ciamis -> Banjarharjo -> Agen Comal -> Desa Gedeg
     const waypoints = [
-      { hour: 0,   coords: [1.1301, 104.1086], name: "JNE Batu Ampar Batam" },
-      { hour: 12,  coords: [-0.8163, 103.4611], name: "Kapal Roro Express (Batam - Kuala Tungkal)" },
-      { hour: 28,  coords: [-1.6101, 103.6131], name: "JNE Sub-Hub Jambi" },
-      { hour: 44,  coords: [-2.9909, 104.7565], name: "JNE Sorting Hub Palembang" },
-      { hour: 58,  coords: [-5.4500, 105.2667], name: "JNE Hub Bandar Lampung" },
-      { hour: 68,  coords: [-5.8722, 105.7533], name: "Pelabuhan Bakauheni" },
-      { hour: 72,  coords: [-5.9328, 105.9922], name: "Ferry Selat Sunda menuju Merak" },
-      { hour: 78,  coords: [-6.1751, 106.8650], name: "JNE Gateway Jakarta" },
-      { hour: 83,  coords: [-6.9175, 107.6191], name: "JNE Hub Bandung" },
-      { hour: 87,  coords: [-7.3274, 108.3551], name: "JNE Hub Ciamis" },
-      { hour: 91,  coords: [-6.9856, 108.8256], name: "JNE Hub Banjarharjo, Brebes (Transit)" }, // Posisinya saat ini
-      { hour: 94,  coords: [-6.9000, 109.5280], name: "Agen JNE Comal" },
-      { hour: 96,  coords: [-6.8865, 109.5385], name: "Kurir Andi Setiawan Menuju Desa Gedeg (52363)" }
+      { hour: 0,    coords: [1.1301, 104.1086], name: "JNE Batu Ampar Batam" },
+      { hour: 12,   coords: [-0.8163, 103.4611], name: "Kapal Roro Express (Batam - Kuala Tungkal)" },
+      { hour: 28,   coords: [-1.6101, 103.6131], name: "JNE Sub-Hub Jambi" },
+      { hour: 44,   coords: [-2.9909, 104.7565], name: "JNE Sorting Hub Palembang" },
+      { hour: 58,   coords: [-5.4500, 105.2667], name: "JNE Hub Bandar Lampung" },
+      { hour: 68,   coords: [-5.8722, 105.7533], name: "Pelabuhan Bakauheni" },
+      { hour: 72,   coords: [-5.9328, 105.9922], name: "Ferry Selat Sunda menuju Merak" },
+      { hour: 78,   coords: [-6.1751, 106.8650], name: "JNE Gateway Jakarta" },
+      { hour: 83,   coords: [-6.9175, 107.6191], name: "JNE Hub Bandung" },
+      { hour: 87,   coords: [-7.3274, 108.3551], name: "JNE Hub Ciamis" },
+      { hour: 91,   coords: [-6.9856, 108.8256], name: "JNE Hub Banjarharjo Brebes" },
+      { hour: 94.5, coords: [-6.9000, 109.5280], name: "Agen JNE Comal (Lokasi Penerima)" },
+      { hour: 96,   coords: [-6.8865, 109.5385], name: "Alamat Penerima: Desa Gedeg, Comal (52363)" }
     ];
 
-    // Mulai simulasi langsung di titik Banjarharjo (Jam ke-91)
-    let elapsedSimSeconds = 91 * 3600; 
+    // Mulai simulasi di jam ke-95.2 (Proses Pengantaran Akhir oleh Kurir)
+    let elapsedSimSeconds = 95.2 * 3600; 
 
     const routeCoords = waypoints.map(w => w.coords);
-    const banjarharjoCoords = waypoints[10].coords; // Koordinat Banjarharjo
+    const destCoords = waypoints[12].coords; // Koordinat Desa Gedeg, Comal
 
-    // Inisialisasi Peta - Langsung Fokus ke Banjarharjo
-    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(banjarharjoCoords, 10);
+    // Inisialisasi Peta - Fokus Langsung ke Area Comal & Desa Gedeg
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(destCoords, 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
     // Garis Rute Bayangan
     L.polyline(routeCoords, { color: '#27272a', weight: 3, dashArray: '6, 8' }).addTo(map);
 
     // Garis Jejak Terlewati
-    const traveledLine = L.polyline([], { color: '#e11d48', weight: 4, opacity: 0.9 }).addTo(map);
+    const traveledLine = L.polyline([], { color: '#10b981', weight: 4, opacity: 0.9 }).addTo(map);
 
     // Marker Dot Style
     const dotIcon = (color) => L.divIcon({
@@ -221,29 +221,29 @@
     // Marker Asal (Batam)
     L.marker(routeCoords[0], { icon: dotIcon('#3b82f6') })
       .addTo(map)
-      .bindTooltip("<b>Asal:</b> JNE Batam", { permanent: true, direction: 'top', offset: [0, -8] });
+      .bindTooltip("<b>Asal:</b> JNE Batam", { permanent: false, direction: 'top' });
       
-    // Marker Tujuan (Comal, Pemalang)
+    // Marker Tujuan (Desa Gedeg, Comal, Pemalang)
     L.marker(routeCoords[routeCoords.length - 1], { icon: dotIcon('#10b981') })
       .addTo(map)
-      .bindTooltip("<b>Tujuan:</b> Desa Gedeg, Comal (52363)", { permanent: true, direction: 'bottom', offset: [0, 8] });
+      .bindTooltip("<b>🏠 Tujuan Akhir:</b> Desa Gedeg, Comal (52363)", { permanent: true, direction: 'bottom', offset: [0, 8] });
 
-    // Marker Truk
+    // Marker Truk / Kurir
     const truckIcon = L.divIcon({
       className: 'truck-marker',
       html: `
         <div class="pulse-ring"></div>
         <div class="truck-icon-bg">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v11c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
         </div>
       `,
       iconSize: [50, 50], iconAnchor: [25, 25]
     });
 
-    const truckMarker = L.marker(banjarharjoCoords, { icon: truckIcon }).addTo(map);
+    const truckMarker = L.marker(waypoints[11].coords, { icon: truckIcon }).addTo(map);
 
-    // Label Permanen Truk
-    truckMarker.bindTooltip('<span id="truck-live-label" class="text-red-400 font-bold">📦 Transit Hub Banjarharjo</span>', {
+    // Label Permanen Kurir
+    truckMarker.bindTooltip('<span id="truck-live-label" class="text-emerald-400 font-bold">🛵 Kurir Andi Setiawan: Mengantar ke Rumah</span>', {
       permanent: true,
       direction: 'top',
       offset: [0, -20]
@@ -270,7 +270,7 @@
     }
 
     function updateTracker() {
-      elapsedSimSeconds += 2;
+      elapsedSimSeconds += 0.8; // Kecepatan diperlambat saat mendekati rumah
       if (elapsedSimSeconds > TOTAL_SECONDS) elapsedSimSeconds = TOTAL_SECONDS;
 
       const pos = getSlowPosition(elapsedSimSeconds);
@@ -278,13 +278,19 @@
       // Update Posisi Marker
       truckMarker.setLatLng(pos.coords);
 
-      // Update Label Truk
+      // Update Label Truk / Kurir
       const tooltipLabel = document.getElementById('truck-live-label');
       if (tooltipLabel) {
-        tooltipLabel.innerText = `🚚 Kurir Andi Setiawan: ${pos.name}`;
+        if (elapsedSimSeconds >= TOTAL_SECONDS) {
+          tooltipLabel.innerHTML = `<span class="text-emerald-400 font-bold">✅ Paket Sampai di Rumah Penerima</span>`;
+          document.getElementById('location-text').innerText = "Paket Telah Sampai di Alamat Tujuan";
+        } else {
+          tooltipLabel.innerText = `🛵 Kurir Andi Setiawan: Sedang Mengantar Paket`;
+          document.getElementById('location-text').innerText = `Proses Antar ke Desa Gedeg, Comal`;
+        }
       }
 
-      // Update Garis Jejak dari Batam sampai posisi saat ini
+      // Update Garis Jejak
       const currentHour = elapsedSimSeconds / 3600;
       const historyPoints = [];
       for (let h = 0; h <= currentHour; h += 0.5) {
@@ -292,8 +298,6 @@
       }
       historyPoints.push(pos.coords);
       traveledLine.setLatLngs(historyPoints);
-
-      document.getElementById('location-text').innerText = pos.name;
 
       // Progress bar %
       const progressPercent = ((elapsedSimSeconds / TOTAL_SECONDS) * 100).toFixed(1);
@@ -304,7 +308,7 @@
     setInterval(updateTracker, 200);
 
     function reCenterMap() {
-      map.flyTo(truckMarker.getLatLng(), 10, { duration: 1.2 });
+      map.flyTo(truckMarker.getLatLng(), 14, { duration: 1.2 });
     }
 
     // Fungsi Kecilkan / Perbesar Panel Deskripsi
@@ -323,4 +327,5 @@
     }
   </script>
 </body>
-</html>
+        </html>
+        
